@@ -1,0 +1,27 @@
+name: Test
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+  packages: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        show-filename: [true, false]
+        mode: [pr-comment, check, summary]
+        file: [kubeconform-result-error.json, kubeconform-result-ok.json]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Kubeconform reporter test
+        uses: ./
+        with:
+          file: ./__tests__/${{ matrix.file }}
+          show-filename: ${{ matrix.show-filename }}
+          mode: ${{ matrix.mode }}

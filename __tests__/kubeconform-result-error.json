@@ -1,0 +1,18 @@
+{
+  "resources": [
+    {
+      "filename": "fixtures/invalid.yaml",
+      "name": "my-replication-controller",
+      "kind": "ReplicationController",
+      "version": "v1",
+      "status": "statusInvalid",
+      "msg": "Additional property templates is not allowed - Invalid type. Expected: [integer,null], given: string"
+    }
+  ],
+  "summary": {
+    "valid": 0,
+    "invalid": 1,
+    "errors": 0,
+    "skipped": 0
+  }
+}

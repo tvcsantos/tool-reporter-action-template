@@ -1,0 +1,33 @@
+# TODO Change name to your reporter
+name: 'Kubeconform reporter'
+# TODO Change the description for your reporter
+description: 'Make a report for Kubeconform results'
+
+branding:
+  icon: settings
+  color: blue
+
+inputs:
+  # TODO Adapt to your needs, could be a file, a directory, etc.
+  file:
+    required: true
+    description: 'Path to Kubeconform JSON results file'
+  show-filename:
+    required: false
+    description: |-
+      Show references to filenames that have errors in the report
+  mode:
+    required: false
+    description: |-
+      One of the following values:
+      - pr-comment - report will be added as a comment on PR.
+      - check - report will be added in a GitHub check.
+      - summary - report will be added as a summary.
+  token:
+    required: true
+    description: 'Your GitHub token'
+    default: ${{ github.token }}
+  # TODO Add extra inputs if required
+runs:
+  using: 'node16'
+  main: 'dist/index.js'
