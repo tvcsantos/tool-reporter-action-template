@@ -7,8 +7,10 @@ import {ReportProperties} from './report-properties'
 import {noBreak} from '../utils/utils'
 
 // TODO change all constants below with your reporting format and messages
-const HEADER = '| Name | Kind | Version | Message |'
-const HEADER_ALIGNMENT = '|-|-|-|-|'
+const HEADER = (showFilename: boolean): string =>
+  `${showFilename ? '| Filename ' : ''}| Name | Kind | Version | Message |`
+const HEADER_ALIGNMENT = (showFilename: boolean): string =>
+  `${showFilename ? '|-' : ''}|-|-|-|-|`
 const FILE_ENCODING = 'utf-8'
 const SUCCESS_COMMENT =
   '# :white_check_mark: All Kubernetes manifests are valid!'
@@ -18,10 +20,16 @@ const FAIL_COMMENT = '# :x: Invalid Kubernetes manifests found!'
 export class KubeconformReportGenerator implements ReportGenerator {
   private constructor() {}
 
-  private makeReportLine(line: ReportLine): string {
-    return `| ${noBreak(line.name)} | ${noBreak(line.kind)} | ${noBreak(
-      line.version
-    )} | ${line.message} |`
+  private makeReportLine(
+    line: ReportLine,
+    properties: ReportProperties
+  ): string {
+    const filename = properties.showFilename
+      ? `| ${noBreak(line.filename)} `
+      : ''
+    return `${filename}| ${noBreak(line.name)} | ${noBreak(
+      line.kind
+    )} | ${noBreak(line.version)} | ${line.message} |`
   }
 
   async generateReport(
@@ -39,8 +47,8 @@ export class KubeconformReportGenerator implements ReportGenerator {
     if (resources.length <= 0) return {report: SUCCESS_COMMENT, failed: false}
 
     reportTable.push(FAIL_COMMENT)
-    reportTable.push(HEADER)
-    reportTable.push(HEADER_ALIGNMENT)
+    reportTable.push(HEADER(properties.showFilename))
+    reportTable.push(HEADER_ALIGNMENT(properties.showFilename))
 
     for (const resource of resources) {
       const line: ReportLine = {
@@ -48,9 +56,9 @@ export class KubeconformReportGenerator implements ReportGenerator {
         kind: resource.kind,
         version: resource.version,
         message: resource.msg,
-        filename: properties.showFilename
+        filename: resource.filename
       }
-      reportTable.push(this.makeReportLine(line))
+      reportTable.push(this.makeReportLine(line, properties))
     }
 
     return {report: reportTable.join('\n'), failed: true}
