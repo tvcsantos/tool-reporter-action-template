@@ -664,16 +664,19 @@ exports.KubeconformReportGenerator = void 0;
 const fs = __importStar(__nccwpck_require__(3292));
 const utils_1 = __nccwpck_require__(1316);
 // TODO change all constants below with your reporting format and messages
-const HEADER = '| Name | Kind | Version | Message |';
-const HEADER_ALIGNMENT = '|-|-|-|-|';
+const HEADER = (showFilename) => `${showFilename ? '| Filename ' : ''}| Name | Kind | Version | Message |`;
+const HEADER_ALIGNMENT = (showFilename) => `${showFilename ? '|-' : ''}|-|-|-|-|`;
 const FILE_ENCODING = 'utf-8';
 const SUCCESS_COMMENT = '# :white_check_mark: All Kubernetes manifests are valid!';
 const FAIL_COMMENT = '# :x: Invalid Kubernetes manifests found!';
 // TODO change this class with and implementation for your report generator
 class KubeconformReportGenerator {
     constructor() { }
-    makeReportLine(line) {
-        return `| ${(0, utils_1.noBreak)(line.name)} | ${(0, utils_1.noBreak)(line.kind)} | ${(0, utils_1.noBreak)(line.version)} | ${line.message} |`;
+    makeReportLine(line, properties) {
+        const filename = properties.showFilename
+            ? `| ${(0, utils_1.noBreak)(line.filename)} `
+            : '';
+        return `${filename}| ${(0, utils_1.noBreak)(line.name)} | ${(0, utils_1.noBreak)(line.kind)} | ${(0, utils_1.noBreak)(line.version)} | ${line.message} |`;
     }
     generateReport(path, properties) {
         var _a;
@@ -685,17 +688,17 @@ class KubeconformReportGenerator {
             if (resources.length <= 0)
                 return { report: SUCCESS_COMMENT, failed: false };
             reportTable.push(FAIL_COMMENT);
-            reportTable.push(HEADER);
-            reportTable.push(HEADER_ALIGNMENT);
+            reportTable.push(HEADER(properties.showFilename));
+            reportTable.push(HEADER_ALIGNMENT(properties.showFilename));
             for (const resource of resources) {
                 const line = {
                     name: resource.name,
                     kind: resource.kind,
                     version: resource.version,
                     message: resource.msg,
-                    filename: properties.showFilename
+                    filename: resource.filename
                 };
-                reportTable.push(this.makeReportLine(line));
+                reportTable.push(this.makeReportLine(line, properties));
             }
             return { report: reportTable.join('\n'), failed: true };
         });

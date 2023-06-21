@@ -16,6 +16,7 @@ inputs:
     required: false
     description: |-
       Show references to filenames that have errors in the report
+    default: 'true'
   mode:
     required: false
     description: |-

@@ -4,5 +4,5 @@ export interface ReportLine {
   kind: string
   version: string
   message: string
-  filename?: boolean
+  filename: string
 }
