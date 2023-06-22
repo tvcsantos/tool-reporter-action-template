@@ -88,11 +88,12 @@ jobs:
 > ℹ️ Note that the following inputs are an illustration for the particular implementation in the example of
 > `Kubeconform`, so please adapt them to your case.
 
-| Input           | Type    | Required | Default Value | Description                                                                          |
-|-----------------|---------|----------|---------------|--------------------------------------------------------------------------------------|
-| `file`          | String  | Yes      | -             | Path to `Kubeconform` `JSON` results file.                                           |
-| `show-filename` | Boolean | No       | `true`        | Show references to filenames that have errors in the report.                         |
-| `mode`          | Enum    | No       |               | Report output mode. <ul><li>`pr-comment`</li><li>`check`</li><li>`summary`</li></ul> |
+| Input           | Type    | Required | Default Value         | Description                                                                          |
+|-----------------|---------|----------|-----------------------|--------------------------------------------------------------------------------------|
+| `file`          | String  | Yes      | -                     | Path to `Kubeconform` `JSON` results file.                                           |
+| `show-filename` | Boolean | No       | `true`                | Show references to filenames that have errors in the report.                         |
+| `mode`          | Enum    | No       |                       | Report output mode. <ul><li>`pr-comment`</li><li>`check`</li><li>`summary`</li></ul> |
+| `token`         | Token   | No       | `${{ github.token }}` | Your GitHub token.                                                                   |
 
 ### Outputs
 
