@@ -17,10 +17,10 @@ inputs:
     description: |-
       Show references to filenames that have errors in the report
     default: 'true'
-  mode:
+  modes:
     required: false
     description: |-
-      One of the following values:
+      A comma separated list of the following values:
       - pr-comment - report will be added as a comment on PR.
       - check - report will be added in a GitHub check.
       - summary - report will be added as a summary.

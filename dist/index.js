@@ -50,8 +50,6 @@ const check_reporter_1 = __nccwpck_require__(3904);
 const summary_reporter_1 = __nccwpck_require__(1178);
 const core = __importStar(__nccwpck_require__(2186));
 const kubeconform_report_generator_1 = __nccwpck_require__(649);
-const utils_1 = __nccwpck_require__(1520);
-const NOT_IN_PR_CONTEXT_WARNING = "Selected 'pr-comment' mode but the action is not running in a pull request context. Switching to 'summary' mode.";
 class ActionOrchestrator {
     constructor() {
         this.gitHubCheck = null;
@@ -60,15 +58,8 @@ class ActionOrchestrator {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return github.getOctokit(this.inputs.token);
     }
-    getReporter() {
+    getReporter(mode) {
         return __awaiter(this, void 0, void 0, function* () {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            let mode = this.inputs.mode;
-            const contextExtensions = utils_1.ContextExtensions.of(github.context);
-            if (mode === inputs_1.ModeOption.PR_COMMENT && !contextExtensions.isPullRequest()) {
-                core.warning(NOT_IN_PR_CONTEXT_WARNING);
-                mode = inputs_1.ModeOption.SUMMARY;
-            }
             switch (mode) {
                 case inputs_1.ModeOption.PR_COMMENT:
                     return new comment_reporter_1.CommentReporter(new comment_1.GitHubPRCommenter(constants_1.APPLICATION_NAME, this.getOctokit(), github.context));
@@ -82,15 +73,28 @@ class ActionOrchestrator {
             }
         });
     }
+    getReporters() {
+        return __awaiter(this, void 0, void 0, function* () {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            const modes = this.inputs.modes;
+            const result = [];
+            for (const mode of modes) {
+                result.push(yield this.getReporter(mode));
+            }
+            return result;
+        });
+    }
     execute(inputs) {
         var _a;
         return __awaiter(this, void 0, void 0, function* () {
             this.inputs = inputs;
-            const reporter = yield this.getReporter();
+            const reporters = yield this.getReporters();
             try {
                 const reportGenerator = kubeconform_report_generator_1.KubeconformReportGenerator.getInstance();
                 const reportResult = yield reportGenerator.generateReport(this.inputs.file, { showFilename: this.inputs.showFilename });
-                yield reporter.report(reportResult);
+                for (const reporter of reporters) {
+                    yield reporter.report(reportResult);
+                }
             }
             catch (e) {
                 (_a = this.gitHubCheck) === null || _a === void 0 ? void 0 : _a.cancel();
@@ -447,7 +451,7 @@ var Input;
 (function (Input) {
     Input["FILE"] = "file";
     Input["SHOW_FILENAME"] = "show-filename";
-    Input["MODE"] = "mode";
+    Input["MODES"] = "modes";
     Input["GITHUB_TOKEN"] = "token";
 })(Input || (exports.Input = Input = {}));
 var ModeOption;
@@ -459,10 +463,10 @@ var ModeOption;
 function gatherInputs() {
     // TODO adapt method to return your changed inputs if required
     const file = getInputFile();
-    const mode = getInputMode();
+    const modes = getInputModes();
     const token = getInputToken();
     const showFilename = getInputShowFilename();
-    return { file, mode, token, showFilename };
+    return { file, modes, token, showFilename };
 }
 exports.gatherInputs = gatherInputs;
 function getInputFile() {
@@ -471,18 +475,39 @@ function getInputFile() {
 function getInputShowFilename() {
     return core.getBooleanInput(Input.SHOW_FILENAME);
 }
-function internalGetInputMode() {
-    const input = core.getInput(Input.MODE);
-    if (!input)
-        return null;
-    if (!Object.values(ModeOption).includes(input)) {
-        throw new Error(`Invalid ${Input.MODE} option '${input}'`);
-    }
-    return input;
+function internalGetInputModes() {
+    const input = core.getInput(Input.MODES);
+    return input
+        .split(',')
+        .map(x => x.trim())
+        .filter(x => !!x)
+        .map(x => {
+        if (!Object.values(ModeOption).includes(x)) {
+            throw new Error(`Invalid ${Input.MODES} option '${x}' on input '${input}'`);
+        }
+        return x;
+    });
 }
-function getInputMode() {
-    var _a;
-    return ((_a = internalGetInputMode()) !== null && _a !== void 0 ? _a : (utils_1.contextExt.isPullRequest() ? ModeOption.PR_COMMENT : ModeOption.SUMMARY));
+const NOT_IN_PR_CONTEXT_WARNING = "Selected 'pr-comment' mode but the action is not running in a pull request context. Ignoring this mode.";
+const NO_ADDITIONAL_MODE_SELECTED_USE_CHECK = "No additional mode selected, using 'check' mode.";
+function getInputModes() {
+    const modes = new Set(internalGetInputModes());
+    const isPullRequest = utils_1.contextExt.isPullRequest();
+    if (modes.size <= 0) {
+        if (isPullRequest) {
+            modes.add(ModeOption.PR_COMMENT);
+        }
+        modes.add(ModeOption.CHECK);
+    }
+    if (modes.has(ModeOption.PR_COMMENT) && !isPullRequest) {
+        core.warning(NOT_IN_PR_CONTEXT_WARNING);
+        modes.delete(ModeOption.PR_COMMENT);
+        if (modes.size <= 0) {
+            core.warning(NO_ADDITIONAL_MODE_SELECTED_USE_CHECK);
+            modes.add(ModeOption.CHECK);
+        }
+    }
+    return modes;
 }
 function getInputToken() {
     return core.getInput(Input.GITHUB_TOKEN, { required: true });
