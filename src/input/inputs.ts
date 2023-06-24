@@ -7,6 +7,7 @@ export interface Inputs {
   modes: Set<ModeOption>
   token: string
   showFilename: boolean
+  failOnError: boolean
 }
 
 // TODO Add or change inputs as required
@@ -14,7 +15,8 @@ export enum Input {
   FILE = 'file',
   SHOW_FILENAME = 'show-filename',
   MODES = 'modes',
-  GITHUB_TOKEN = 'token'
+  GITHUB_TOKEN = 'token',
+  FAIL_ON_ERROR = 'fail-on-error'
 }
 
 export enum ModeOption {
@@ -29,7 +31,8 @@ export function gatherInputs(): Inputs {
   const modes = getInputModes()
   const token = getInputToken()
   const showFilename = getInputShowFilename()
-  return {file, modes, token, showFilename}
+  const failOnError = getInputFailOnError()
+  return {file, modes, token, showFilename, failOnError}
 }
 
 function getInputFile(): string {
@@ -83,6 +86,10 @@ function getInputModes(): Set<ModeOption> {
 
 function getInputToken(): string {
   return core.getInput(Input.GITHUB_TOKEN, {required: true})
+}
+
+function getInputFailOnError(): boolean {
+  return core.getBooleanInput(Input.FAIL_ON_ERROR)
 }
 
 // TODO Add methods for your extra inputs

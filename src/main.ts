@@ -4,7 +4,10 @@ import {ActionOrchestrator} from './action/action-orchestrator'
 
 async function run(): Promise<void> {
   const inputs = gatherInputs()
-  return new ActionOrchestrator().execute(inputs)
+  const exitCode = await new ActionOrchestrator().execute(inputs)
+  if (exitCode !== 0) {
+    core.setFailed(`Reporter exited with code ${exitCode}, failing...`)
+  }
 }
 
 // eslint-disable-next-line github/no-then

@@ -53,7 +53,7 @@ export class ActionOrchestrator {
     return result
   }
 
-  async execute(inputs: Inputs): Promise<void> {
+  async execute(inputs: Inputs): Promise<number> {
     this.inputs = inputs
     const reporters = await this.getReporters()
     try {
@@ -65,6 +65,7 @@ export class ActionOrchestrator {
       for (const reporter of reporters) {
         await reporter.report(reportResult)
       }
+      return reportResult.failed && this.inputs.failOnError ? 1 : 0
     } catch (e) {
       this.gitHubCheck?.cancel()
       throw e

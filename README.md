@@ -94,6 +94,7 @@ jobs:
 | `show-filename` | Boolean      | No       | `true`                                                                                        | Show references to filenames that have errors in the report.                                                                                         |
 | `mode`          | List\<Enum\> | No       | <ul><li>`pr-comment, check` - on a PR context</li><li>`check` - on a non PR context</li></ul> | Report output mode. <ul><li>`pr-comment`</li><li>`check`</li><li>`summary`</li></ul>Multiple output modes can be provided in a comma separated list. |
 | `token`         | Token        | No       | `${{ github.token }}`                                                                         | Your GitHub token.                                                                                                                                   |
+| `fail-on-error` | Boolean      | No       | `false`                                                                                       | Fail the action if errors are found on the report.                                                                                                   |
 
 ### Outputs
 

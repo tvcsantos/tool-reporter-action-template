@@ -95,6 +95,7 @@ class ActionOrchestrator {
                 for (const reporter of reporters) {
                     yield reporter.report(reportResult);
                 }
+                return reportResult.failed && this.inputs.failOnError ? 1 : 0;
             }
             catch (e) {
                 (_a = this.gitHubCheck) === null || _a === void 0 ? void 0 : _a.cancel();
@@ -453,6 +454,7 @@ var Input;
     Input["SHOW_FILENAME"] = "show-filename";
     Input["MODES"] = "modes";
     Input["GITHUB_TOKEN"] = "token";
+    Input["FAIL_ON_ERROR"] = "fail-on-error";
 })(Input || (exports.Input = Input = {}));
 var ModeOption;
 (function (ModeOption) {
@@ -466,7 +468,8 @@ function gatherInputs() {
     const modes = getInputModes();
     const token = getInputToken();
     const showFilename = getInputShowFilename();
-    return { file, modes, token, showFilename };
+    const failOnError = getInputFailOnError();
+    return { file, modes, token, showFilename, failOnError };
 }
 exports.gatherInputs = gatherInputs;
 function getInputFile() {
@@ -511,6 +514,9 @@ function getInputModes() {
 }
 function getInputToken() {
     return core.getInput(Input.GITHUB_TOKEN, { required: true });
+}
+function getInputFailOnError() {
+    return core.getBooleanInput(Input.FAIL_ON_ERROR);
 }
 // TODO Add methods for your extra inputs
 // Pattern: function getInput<input-name>(): <type>
@@ -562,7 +568,10 @@ const action_orchestrator_1 = __nccwpck_require__(1894);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const inputs = (0, inputs_1.gatherInputs)();
-        return new action_orchestrator_1.ActionOrchestrator().execute(inputs);
+        const exitCode = yield new action_orchestrator_1.ActionOrchestrator().execute(inputs);
+        if (exitCode !== 0) {
+            core.setFailed(`Reporter exited with code ${exitCode}, failing...`);
+        }
     });
 }
 // eslint-disable-next-line github/no-then

@@ -39,3 +39,19 @@ jobs:
           file: ./__tests__/${{ matrix.file }}
           show-filename: false
           modes: pr-comment, check
+  test-fail-on-error:
+    strategy:
+      matrix:
+        file: [ kubeconform-result-error.json, kubeconform-result-ok.json ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Kubeconform reporter test
+        uses: ./
+        with:
+          file: ./__tests__/${{ matrix.file }}
+          show-filename: false
+          modes: summary
+          fail-on-error: true
+        continue-on-error: true

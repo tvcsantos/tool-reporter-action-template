@@ -28,6 +28,10 @@ inputs:
     required: true
     description: 'Your GitHub token'
     default: ${{ github.token }}
+  fail-on-error:
+    required: false
+    description: 'Fail the action if errors are found on the report'
+    default: 'false'
   # TODO Add extra inputs if required
 runs:
   using: 'node16'
