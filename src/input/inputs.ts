@@ -44,15 +44,15 @@ function getInputShowFilename(): boolean {
 }
 
 function internalGetInputModes(): ModeOption[] {
-  const input = core.getInput(Input.MODES)
-  return input
-    .split(',')
-    .map(x => x.trim())
+  const multilineInput = core.getMultilineInput(Input.MODES)
+  return multilineInput
     .filter(x => !!x)
     .map(x => {
       if (!Object.values<string>(ModeOption).includes(x)) {
         throw new Error(
-          `Invalid ${Input.MODES} option '${x}' on input '${input}'`
+          `Invalid ${Input.MODES} option '${x}' on input '${JSON.stringify(
+            multilineInput
+          )}'`
         )
       }
       return x as ModeOption

@@ -479,14 +479,12 @@ function getInputShowFilename() {
     return core.getBooleanInput(Input.SHOW_FILENAME);
 }
 function internalGetInputModes() {
-    const input = core.getInput(Input.MODES);
-    return input
-        .split(',')
-        .map(x => x.trim())
+    const multilineInput = core.getMultilineInput(Input.MODES);
+    return multilineInput
         .filter(x => !!x)
         .map(x => {
         if (!Object.values(ModeOption).includes(x)) {
-            throw new Error(`Invalid ${Input.MODES} option '${x}' on input '${input}'`);
+            throw new Error(`Invalid ${Input.MODES} option '${x}' on input '${JSON.stringify(multilineInput)}'`);
         }
         return x;
     });

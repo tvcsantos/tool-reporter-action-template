@@ -38,7 +38,9 @@ jobs:
         with:
           file: ./__tests__/${{ matrix.file }}
           show-filename: false
-          modes: pr-comment, check
+          modes: |
+            pr-comment
+            check
   test-fail-on-error:
     strategy:
       matrix:
