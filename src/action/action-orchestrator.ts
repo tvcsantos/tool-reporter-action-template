@@ -10,10 +10,6 @@ import {SummaryReporter} from '../report/summary-reporter'
 import * as core from '@actions/core'
 import {GitHub} from '@actions/github/lib/utils'
 import {KubeconformReportGenerator} from '../report/kubeconform-report-generator'
-import {ContextExtensions} from '../github/utils'
-
-const NOT_IN_PR_CONTEXT_WARNING =
-  "Selected 'pr-comment' mode but the action is not running in a pull request context. Switching to 'summary' mode."
 
 export class ActionOrchestrator {
   private gitHubCheck: GitHubCheck | null = null
@@ -24,14 +20,7 @@ export class ActionOrchestrator {
     return github.getOctokit(this.inputs!!.token)
   }
 
-  private async getReporter(): Promise<Reporter> {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    let mode = this.inputs!!.mode
-    const contextExtensions = ContextExtensions.of(github.context)
-    if (mode === ModeOption.PR_COMMENT && !contextExtensions.isPullRequest()) {
-      core.warning(NOT_IN_PR_CONTEXT_WARNING)
-      mode = ModeOption.SUMMARY
-    }
+  private async getReporter(mode: ModeOption): Promise<Reporter> {
     switch (mode) {
       case ModeOption.PR_COMMENT:
         return new CommentReporter(
@@ -54,16 +43,29 @@ export class ActionOrchestrator {
     }
   }
 
-  async execute(inputs: Inputs): Promise<void> {
+  private async getReporters(): Promise<Reporter[]> {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const modes = this.inputs!!.modes
+    const result: Reporter[] = []
+    for (const mode of modes) {
+      result.push(await this.getReporter(mode))
+    }
+    return result
+  }
+
+  async execute(inputs: Inputs): Promise<number> {
     this.inputs = inputs
-    const reporter = await this.getReporter()
+    const reporters = await this.getReporters()
     try {
       const reportGenerator = KubeconformReportGenerator.getInstance()
       const reportResult = await reportGenerator.generateReport(
         this.inputs.file,
         {showFilename: this.inputs.showFilename}
       )
-      await reporter.report(reportResult)
+      for (const reporter of reporters) {
+        await reporter.report(reportResult)
+      }
+      return reportResult.failed && this.inputs.failOnError ? 1 : 0
     } catch (e) {
       this.gitHubCheck?.cancel()
       throw e

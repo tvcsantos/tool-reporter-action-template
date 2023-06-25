@@ -23,8 +23,8 @@ Below we illustrate examples of expected outputs depending on the report mode.
 
 #### Mode `pr-comment`
 
-> ℹ️ By default when the action runs with `pr-comment` mode in a non pull-request context we will produce a report using
-> `summary` mode.
+> ℹ️ By default when the action runs with `pr-comment` mode in a non pull-request context this mode will be ignored and
+> if no additional mode was provided we will produce a report using `check` mode .
 
 When running in `pr-comment` mode in case of no errors found you will get a comment in you pull request that should look
 as follows
@@ -88,12 +88,13 @@ jobs:
 > ℹ️ Note that the following inputs are an illustration for the particular implementation in the example of
 > `Kubeconform`, so please adapt them to your case.
 
-| Input           | Type    | Required | Default Value         | Description                                                                          |
-|-----------------|---------|----------|-----------------------|--------------------------------------------------------------------------------------|
-| `file`          | String  | Yes      | -                     | Path to `Kubeconform` `JSON` results file.                                           |
-| `show-filename` | Boolean | No       | `true`                | Show references to filenames that have errors in the report.                         |
-| `mode`          | Enum    | No       |                       | Report output mode. <ul><li>`pr-comment`</li><li>`check`</li><li>`summary`</li></ul> |
-| `token`         | Token   | No       | `${{ github.token }}` | Your GitHub token.                                                                   |
+| Input           | Type         | Required | Default Value                                                                                 | Description                                                                                                                                         |
+|-----------------|--------------|----------|-----------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| `file`          | String       | Yes      | -                                                                                             | Path to `Kubeconform` `JSON` results file.                                                                                                          |
+| `show-filename` | Boolean      | No       | `true`                                                                                        | Show references to filenames that have errors in the report.                                                                                        |
+| `mode`          | List\<Enum\> | No       | <ul><li>`pr-comment, check` - on a PR context</li><li>`check` - on a non PR context</li></ul> | Report output mode. <ul><li>`pr-comment`</li><li>`check`</li><li>`summary`</li></ul>Multiple output modes can be provided using a multi-line input. |
+| `token`         | Token        | No       | `${{ github.token }}`                                                                         | Your GitHub token.                                                                                                                                  |
+| `fail-on-error` | Boolean      | No       | `false`                                                                                       | Fail the action if errors are found on the report.                                                                                                  |
 
 ### Outputs
 
