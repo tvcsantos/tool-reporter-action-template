@@ -1,5 +1,5 @@
 import * as github from '@actions/github'
-import {Context} from '@actions/github/lib/context'
+import { Context } from '@actions/github/lib/context'
 
 const prEvents = [
   'pull_request',

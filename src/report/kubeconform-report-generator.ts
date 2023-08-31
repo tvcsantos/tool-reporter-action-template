@@ -1,10 +1,10 @@
 import * as fs from 'fs/promises'
-import {KubeconformResult, KubeconformResultEntry} from '../model/kubeconform'
-import {ReportLine} from '../model/report-line'
-import {ReportResult} from '../model/report-result'
-import {ReportGenerator} from './report-generator'
-import {ReportProperties} from './report-properties'
-import {noBreak} from '../utils/utils'
+import { KubeconformResult, KubeconformResultEntry } from '../model/kubeconform'
+import { ReportLine } from '../model/report-line'
+import { ReportResult } from '../model/report-result'
+import { ReportGenerator } from './report-generator'
+import { ReportProperties } from './report-properties'
+import { noBreak } from '../utils/utils'
 
 // TODO change all constants below with your reporting format and messages
 const HEADER = (showFilename: boolean): string =>
@@ -44,7 +44,7 @@ export class KubeconformReportGenerator implements ReportGenerator {
     const resources: KubeconformResultEntry[] =
       kubeconformResult.resources ?? []
 
-    if (resources.length <= 0) return {report: SUCCESS_COMMENT, failed: false}
+    if (resources.length <= 0) return { report: SUCCESS_COMMENT, failed: false }
 
     reportTable.push(FAIL_COMMENT)
     reportTable.push(HEADER(properties.showFilename))
@@ -61,7 +61,7 @@ export class KubeconformReportGenerator implements ReportGenerator {
       reportTable.push(this.makeReportLine(line, properties))
     }
 
-    return {report: reportTable.join('\n'), failed: true}
+    return { report: reportTable.join('\n'), failed: true }
   }
 
   private static instance: KubeconformReportGenerator | null

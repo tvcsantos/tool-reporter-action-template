@@ -1,5 +1,5 @@
-import {ReportResult} from '../model/report-result'
-import {ReportProperties} from './report-properties'
+import { ReportResult } from '../model/report-result'
+import { ReportProperties } from './report-properties'
 
 export interface ReportGenerator {
   generateReport(

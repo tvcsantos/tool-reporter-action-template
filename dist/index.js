@@ -1,797 +1,5 @@
-require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
+/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
-
-/***/ 1894:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ActionOrchestrator = void 0;
-const check_1 = __nccwpck_require__(710);
-const inputs_1 = __nccwpck_require__(6781);
-const github = __importStar(__nccwpck_require__(5438));
-const comment_reporter_1 = __nccwpck_require__(243);
-const comment_1 = __nccwpck_require__(3456);
-const constants_1 = __nccwpck_require__(2868);
-const check_reporter_1 = __nccwpck_require__(3904);
-const summary_reporter_1 = __nccwpck_require__(1178);
-const core = __importStar(__nccwpck_require__(2186));
-const kubeconform_report_generator_1 = __nccwpck_require__(649);
-class ActionOrchestrator {
-    constructor() {
-        this.gitHubCheck = null;
-    }
-    getOctokit() {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        return github.getOctokit(this.inputs.token);
-    }
-    getReporter(mode) {
-        return __awaiter(this, void 0, void 0, function* () {
-            switch (mode) {
-                case inputs_1.ModeOption.PR_COMMENT:
-                    return new comment_reporter_1.CommentReporter(new comment_1.GitHubPRCommenter(constants_1.APPLICATION_NAME, this.getOctokit(), github.context));
-                case inputs_1.ModeOption.CHECK: {
-                    const gitHubCheckCreator = new check_1.GitHubCheckCreator(this.getOctokit(), github.context);
-                    this.gitHubCheck = yield gitHubCheckCreator.create(constants_1.CHECK_NAME);
-                    return new check_reporter_1.CheckReporter(this.gitHubCheck);
-                }
-                case inputs_1.ModeOption.SUMMARY:
-                    return new summary_reporter_1.SummaryReporter(core.summary);
-            }
-        });
-    }
-    getReporters() {
-        return __awaiter(this, void 0, void 0, function* () {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const modes = this.inputs.modes;
-            const result = [];
-            for (const mode of modes) {
-                result.push(yield this.getReporter(mode));
-            }
-            return result;
-        });
-    }
-    execute(inputs) {
-        var _a;
-        return __awaiter(this, void 0, void 0, function* () {
-            this.inputs = inputs;
-            const reporters = yield this.getReporters();
-            try {
-                const reportGenerator = kubeconform_report_generator_1.KubeconformReportGenerator.getInstance();
-                const reportResult = yield reportGenerator.generateReport(this.inputs.file, { showFilename: this.inputs.showFilename });
-                for (const reporter of reporters) {
-                    yield reporter.report(reportResult);
-                }
-                return reportResult.failed && this.inputs.failOnError ? 1 : 0;
-            }
-            catch (e) {
-                (_a = this.gitHubCheck) === null || _a === void 0 ? void 0 : _a.cancel();
-                throw e;
-            }
-        });
-    }
-}
-exports.ActionOrchestrator = ActionOrchestrator;
-
-
-/***/ }),
-
-/***/ 2868:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CHECK_NAME = exports.APPLICATION_NAME = void 0;
-// TODO change to your application name (e.g. kubeconform-reporter)
-exports.APPLICATION_NAME = 'kubeconfrom-reporter';
-// TODO change to your check name (e.g. Kubeconform Check)
-exports.CHECK_NAME = 'Kubeconform Check';
-
-
-/***/ }),
-
-/***/ 710:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.GitHubCheck = exports.GitHubCheckCreator = void 0;
-const core = __importStar(__nccwpck_require__(2186));
-const utils_1 = __nccwpck_require__(1520);
-class GitHubCheckCreator {
-    constructor(octokit, context) {
-        this.octokit = octokit;
-        this.context = context;
-    }
-    create(name) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const head_sha = utils_1.ContextExtensions.of(this.context).getSha();
-            core.info(`Creating ${name}...`);
-            const payload = {
-                owner: this.context.repo.owner,
-                repo: this.context.repo.repo,
-                name,
-                head_sha
-            };
-            core.debug(`Check payload: ${JSON.stringify(payload)}`);
-            const response = yield this.octokit.rest.checks.create(payload);
-            if (response.status !== 201) {
-                core.warning(`Unexpected status code received when creating ${name}: ${response.status}`);
-                core.debug(JSON.stringify(response, null, 2));
-            }
-            else {
-                core.info(`${name} created`);
-                core.debug(`Check response: ${JSON.stringify(response.data)}`);
-            }
-            return new GitHubCheck(this.octokit, this.context, name, response.data.id);
-        });
-    }
-}
-exports.GitHubCheckCreator = GitHubCheckCreator;
-class GitHubCheck {
-    constructor(octokit, context, checkName, checkRunId) {
-        this.octokit = octokit;
-        this.context = context;
-        this.checkName = checkName;
-        this.checkRunId = checkRunId;
-    }
-    pass(summary, text) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.finish('success', summary, text);
-        });
-    }
-    fail(summary, text) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.finish('failure', summary, text);
-        });
-    }
-    skip() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.finish('skipped', `${this.checkName} was skipped`, '');
-        });
-    }
-    cancel() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.finish('cancelled', `${this.checkName} Check could not be completed`, `Something went wrong and the ${this.checkName} could not be completed. Check your action logs for more details.`);
-        });
-    }
-    finish(conclusion, summary, text) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const response = yield this.octokit.rest.checks.update({
-                owner: this.context.repo.owner,
-                repo: this.context.repo.repo,
-                check_run_id: this.checkRunId,
-                status: 'completed',
-                conclusion,
-                output: {
-                    title: this.checkName,
-                    summary,
-                    text
-                }
-            });
-            if (response.status !== 200) {
-                core.warning(`Unexpected status code received when creating check: ${response.status}`);
-                core.debug(JSON.stringify(response, null, 2));
-            }
-            else {
-                core.info(`${this.checkName} updated`);
-            }
-        });
-    }
-}
-exports.GitHubCheck = GitHubCheck;
-
-
-/***/ }),
-
-/***/ 3456:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.GitHubPRCommenter = void 0;
-const core = __importStar(__nccwpck_require__(2186));
-function getCommentPreface(id) {
-    return `<!-- Comment automatically managed by ${id}, do not remove this line -->`;
-}
-class GitHubPRCommenter {
-    constructor(applicationName, octokit, context) {
-        this.applicationName = applicationName;
-        this.octokit = octokit;
-        this.context = context;
-        this.commentPreface = getCommentPreface(applicationName);
-    }
-    comment(data) {
-        var _a;
-        return __awaiter(this, void 0, void 0, function* () {
-            const message = this.commentPreface.concat('\r\n', data);
-            const contextIssue = this.context.issue.number;
-            const contextOwner = this.context.repo.owner;
-            const contextRepo = this.context.repo.repo;
-            core.debug('Gathering existing comments...');
-            const { data: existingComments } = yield this.octokit.rest.issues.listComments({
-                issue_number: contextIssue,
-                owner: contextOwner,
-                repo: contextRepo
-            });
-            for (const comment of existingComments) {
-                const firstLine = (_a = comment.body) === null || _a === void 0 ? void 0 : _a.split('\r\n')[0];
-                if (firstLine === this.commentPreface) {
-                    core.debug(`Existing comment from ${this.applicationName} found. Attempting to delete it...`);
-                    this.octokit.rest.issues.deleteComment({
-                        comment_id: comment.id,
-                        owner: contextOwner,
-                        repo: contextRepo
-                    });
-                }
-            }
-            core.debug('Creating a new comment...');
-            this.octokit.rest.issues.createComment({
-                issue_number: contextIssue,
-                owner: contextOwner,
-                repo: contextRepo,
-                body: message
-            });
-            core.debug('Successfully created a new comment!');
-        });
-    }
-}
-exports.GitHubPRCommenter = GitHubPRCommenter;
-
-
-/***/ }),
-
-/***/ 1520:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.contextExt = exports.ContextExtensions = void 0;
-const github = __importStar(__nccwpck_require__(5438));
-const prEvents = [
-    'pull_request',
-    'pull_request_target',
-    'pull_request_review',
-    'pull_request_review_comment'
-];
-const REFS_REGEX = RegExp('refs/(heads|tags)/');
-class ContextExtensions {
-    constructor(context) {
-        this.context = context;
-    }
-    isPullRequest() {
-        return prEvents.includes(this.context.eventName);
-    }
-    getSha() {
-        let sha = this.context.sha;
-        if (this.isPullRequest()) {
-            const pull = this.context.payload.pull_request;
-            if (pull === null || pull === void 0 ? void 0 : pull.head.sha) {
-                sha = pull === null || pull === void 0 ? void 0 : pull.head.sha;
-            }
-        }
-        return sha;
-    }
-    getCurrentBranchName() {
-        return this.context.ref.replace(REFS_REGEX, '');
-    }
-    getCurrentCommitId(short = true) {
-        let commitId = this.context.sha;
-        if (short)
-            commitId = commitId.substring(0, 7);
-        return commitId;
-    }
-    static of(context) {
-        return new ContextExtensions(context);
-    }
-}
-exports.ContextExtensions = ContextExtensions;
-exports.contextExt = ContextExtensions.of(github.context);
-
-
-/***/ }),
-
-/***/ 6781:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.gatherInputs = exports.ModeOption = exports.Input = void 0;
-const core = __importStar(__nccwpck_require__(2186));
-const utils_1 = __nccwpck_require__(1520);
-// TODO Add or change inputs as required
-var Input;
-(function (Input) {
-    Input["FILE"] = "file";
-    Input["SHOW_FILENAME"] = "show-filename";
-    Input["MODES"] = "modes";
-    Input["GITHUB_TOKEN"] = "token";
-    Input["FAIL_ON_ERROR"] = "fail-on-error";
-})(Input || (exports.Input = Input = {}));
-var ModeOption;
-(function (ModeOption) {
-    ModeOption["PR_COMMENT"] = "pr-comment";
-    ModeOption["CHECK"] = "check";
-    ModeOption["SUMMARY"] = "summary";
-})(ModeOption || (exports.ModeOption = ModeOption = {}));
-function gatherInputs() {
-    // TODO adapt method to return your changed inputs if required
-    const file = getInputFile();
-    const modes = getInputModes();
-    const token = getInputToken();
-    const showFilename = getInputShowFilename();
-    const failOnError = getInputFailOnError();
-    return { file, modes, token, showFilename, failOnError };
-}
-exports.gatherInputs = gatherInputs;
-function getInputFile() {
-    return core.getInput(Input.FILE, { required: true });
-}
-function getInputShowFilename() {
-    return core.getBooleanInput(Input.SHOW_FILENAME);
-}
-function internalGetInputModes() {
-    const multilineInput = core.getMultilineInput(Input.MODES);
-    return multilineInput
-        .filter(x => !!x)
-        .map(x => {
-        if (!Object.values(ModeOption).includes(x)) {
-            throw new Error(`Invalid ${Input.MODES} option '${x}' on input '${JSON.stringify(multilineInput)}'`);
-        }
-        return x;
-    });
-}
-const NOT_IN_PR_CONTEXT_WARNING = "Selected 'pr-comment' mode but the action is not running in a pull request context. Ignoring this mode.";
-const NO_ADDITIONAL_MODE_SELECTED_USE_CHECK = "No additional mode selected, using 'check' mode.";
-function getInputModes() {
-    const modes = new Set(internalGetInputModes());
-    const isPullRequest = utils_1.contextExt.isPullRequest();
-    if (modes.size <= 0) {
-        if (isPullRequest) {
-            modes.add(ModeOption.PR_COMMENT);
-        }
-        modes.add(ModeOption.CHECK);
-    }
-    if (modes.has(ModeOption.PR_COMMENT) && !isPullRequest) {
-        core.warning(NOT_IN_PR_CONTEXT_WARNING);
-        modes.delete(ModeOption.PR_COMMENT);
-        if (modes.size <= 0) {
-            core.warning(NO_ADDITIONAL_MODE_SELECTED_USE_CHECK);
-            modes.add(ModeOption.CHECK);
-        }
-    }
-    return modes;
-}
-function getInputToken() {
-    return core.getInput(Input.GITHUB_TOKEN, { required: true });
-}
-function getInputFailOnError() {
-    return core.getBooleanInput(Input.FAIL_ON_ERROR);
-}
-// TODO Add methods for your extra inputs
-// Pattern: function getInput<input-name>(): <type>
-
-
-/***/ }),
-
-/***/ 3109:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core = __importStar(__nccwpck_require__(2186));
-const inputs_1 = __nccwpck_require__(6781);
-const action_orchestrator_1 = __nccwpck_require__(1894);
-function run() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const inputs = (0, inputs_1.gatherInputs)();
-        const exitCode = yield new action_orchestrator_1.ActionOrchestrator().execute(inputs);
-        if (exitCode !== 0) {
-            core.setFailed(`Reporter exited with code ${exitCode}, failing...`);
-        }
-    });
-}
-// eslint-disable-next-line github/no-then
-run().catch(error => {
-    core.error(error);
-    if (error instanceof Error) {
-        core.setFailed(error.message);
-    }
-});
-
-
-/***/ }),
-
-/***/ 3904:
-/***/ (function(__unused_webpack_module, exports) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CheckReporter = void 0;
-// TODO change with a FAIL message for your summary
-const FAIL_SUMMARY = 'Manifests found that are not valid!';
-// TODO change with a SUCCESS message for your summary
-const SUCCESS_SUMMARY = 'No invalid manifests!';
-class CheckReporter {
-    constructor(gitHubCheck) {
-        this.gitHubCheck = gitHubCheck;
-    }
-    report(data) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (data.failed) {
-                yield this.gitHubCheck.fail(FAIL_SUMMARY, data.report);
-            }
-            else {
-                yield this.gitHubCheck.pass(SUCCESS_SUMMARY, data.report);
-            }
-        });
-    }
-}
-exports.CheckReporter = CheckReporter;
-
-
-/***/ }),
-
-/***/ 243:
-/***/ (function(__unused_webpack_module, exports) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CommentReporter = void 0;
-class CommentReporter {
-    constructor(gitHubPRCommenter) {
-        this.gitHubPRCommenter = gitHubPRCommenter;
-    }
-    report(data) {
-        return __awaiter(this, void 0, void 0, function* () {
-            yield this.gitHubPRCommenter.comment(data.report);
-        });
-    }
-}
-exports.CommentReporter = CommentReporter;
-
-
-/***/ }),
-
-/***/ 649:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.KubeconformReportGenerator = void 0;
-const fs = __importStar(__nccwpck_require__(3292));
-const utils_1 = __nccwpck_require__(1316);
-// TODO change all constants below with your reporting format and messages
-const HEADER = (showFilename) => `${showFilename ? '| Filename ' : ''}| Name | Kind | Version | Message |`;
-const HEADER_ALIGNMENT = (showFilename) => `${showFilename ? '|-' : ''}|-|-|-|-|`;
-const FILE_ENCODING = 'utf-8';
-const SUCCESS_COMMENT = '# :white_check_mark: All Kubernetes manifests are valid!';
-const FAIL_COMMENT = '# :x: Invalid Kubernetes manifests found!';
-// TODO change this class with and implementation for your report generator
-class KubeconformReportGenerator {
-    constructor() { }
-    makeReportLine(line, properties) {
-        const filename = properties.showFilename
-            ? `| ${(0, utils_1.noBreak)(line.filename)} `
-            : '';
-        return `${filename}| ${(0, utils_1.noBreak)(line.name)} | ${(0, utils_1.noBreak)(line.kind)} | ${(0, utils_1.noBreak)(line.version)} | ${line.message} |`;
-    }
-    generateReport(path, properties) {
-        var _a;
-        return __awaiter(this, void 0, void 0, function* () {
-            const result = yield fs.readFile(path, FILE_ENCODING);
-            const kubeconformResult = JSON.parse(result);
-            const reportTable = [];
-            const resources = (_a = kubeconformResult.resources) !== null && _a !== void 0 ? _a : [];
-            if (resources.length <= 0)
-                return { report: SUCCESS_COMMENT, failed: false };
-            reportTable.push(FAIL_COMMENT);
-            reportTable.push(HEADER(properties.showFilename));
-            reportTable.push(HEADER_ALIGNMENT(properties.showFilename));
-            for (const resource of resources) {
-                const line = {
-                    name: resource.name,
-                    kind: resource.kind,
-                    version: resource.version,
-                    message: resource.msg,
-                    filename: resource.filename
-                };
-                reportTable.push(this.makeReportLine(line, properties));
-            }
-            return { report: reportTable.join('\n'), failed: true };
-        });
-    }
-    static getInstance() {
-        if (!KubeconformReportGenerator.instance) {
-            KubeconformReportGenerator.instance = new KubeconformReportGenerator();
-        }
-        return KubeconformReportGenerator.instance;
-    }
-}
-exports.KubeconformReportGenerator = KubeconformReportGenerator;
-
-
-/***/ }),
-
-/***/ 1178:
-/***/ (function(__unused_webpack_module, exports) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.SummaryReporter = void 0;
-class SummaryReporter {
-    constructor(theSummary) {
-        this.theSummary = theSummary;
-    }
-    report(data) {
-        return __awaiter(this, void 0, void 0, function* () {
-            yield this.theSummary.addRaw(data.report).write();
-        });
-    }
-}
-exports.SummaryReporter = SummaryReporter;
-
-
-/***/ }),
-
-/***/ 1316:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.noBreak = void 0;
-function noBreak(s) {
-    return s.replace(/-/g, '&#8209;').replace(/ /g, '&nbsp;');
-}
-exports.noBreak = noBreak;
-
-
-/***/ }),
 
 /***/ 7351:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
@@ -2219,6 +1427,19 @@ class HttpClientResponse {
             }));
         });
     }
+    readBodyBuffer() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
+                const chunks = [];
+                this.message.on('data', (chunk) => {
+                    chunks.push(chunk);
+                });
+                this.message.on('end', () => {
+                    resolve(Buffer.concat(chunks));
+                });
+            }));
+        });
+    }
 }
 exports.HttpClientResponse = HttpClientResponse;
 function isHttps(requestUrl) {
@@ -2723,7 +1944,13 @@ function getProxyUrl(reqUrl) {
         }
     })();
     if (proxyVar) {
-        return new URL(proxyVar);
+        try {
+            return new URL(proxyVar);
+        }
+        catch (_a) {
+            if (!proxyVar.startsWith('http://') && !proxyVar.startsWith('https://'))
+                return new URL(`http://${proxyVar}`);
+        }
     }
     else {
         return undefined;
@@ -6777,10 +6004,6 @@ function getNodeRequestOptions(request) {
 		agent = agent(parsedURL);
 	}
 
-	if (!headers.has('Connection') && !agent) {
-		headers.set('Connection', 'close');
-	}
-
 	// HTTP-network fetch step 4.2
 	// chunked encoding is handled by Node.js
 
@@ -7154,8 +6377,11 @@ function fixResponseChunkedTransferBadEnding(request, errorCallback) {
 
 		if (headers['transfer-encoding'] === 'chunked' && !headers['content-length']) {
 			response.once('close', function (hadError) {
+				// tests for socket presence, as in some situations the
+				// the 'socket' event is not triggered for the request
+				// (happens in deno), avoids `TypeError`
 				// if a data listener is still present we didn't end cleanly
-				const hasDataListener = socket.listenerCount('data') > 0;
+				const hasDataListener = socket && socket.listenerCount('data') > 0;
 
 				if (hasDataListener && !hadError) {
 					const err = new Error('Premature close');
@@ -7197,6 +6423,7 @@ exports.Headers = Headers;
 exports.Request = Request;
 exports.Response = Response;
 exports.FetchError = FetchError;
+exports.AbortError = AbortError;
 
 
 /***/ }),
@@ -10404,6 +9631,707 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 8013:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ActionOrchestrator = void 0;
+const check_1 = __nccwpck_require__(6149);
+const inputs_1 = __nccwpck_require__(8767);
+const github = __importStar(__nccwpck_require__(5438));
+const comment_reporter_1 = __nccwpck_require__(2639);
+const comment_1 = __nccwpck_require__(9452);
+const constants_1 = __nccwpck_require__(2706);
+const check_reporter_1 = __nccwpck_require__(3348);
+const summary_reporter_1 = __nccwpck_require__(867);
+const core = __importStar(__nccwpck_require__(2186));
+const kubeconform_report_generator_1 = __nccwpck_require__(4918);
+class ActionOrchestrator {
+    gitHubCheck = null;
+    inputs;
+    getOctokit() {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion,@typescript-eslint/no-extra-non-null-assertion
+        return github.getOctokit(this.inputs.token);
+    }
+    async getReporter(mode) {
+        switch (mode) {
+            case inputs_1.ModeOption.PR_COMMENT:
+                return new comment_reporter_1.CommentReporter(new comment_1.GitHubPRCommenter(constants_1.APPLICATION_NAME, this.getOctokit(), github.context));
+            case inputs_1.ModeOption.CHECK: {
+                const gitHubCheckCreator = new check_1.GitHubCheckCreator(this.getOctokit(), github.context);
+                this.gitHubCheck = await gitHubCheckCreator.create(constants_1.CHECK_NAME);
+                return new check_reporter_1.CheckReporter(this.gitHubCheck);
+            }
+            case inputs_1.ModeOption.SUMMARY:
+                return new summary_reporter_1.SummaryReporter(core.summary);
+        }
+    }
+    async getReporters() {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion,@typescript-eslint/no-extra-non-null-assertion
+        const modes = this.inputs.modes;
+        const result = [];
+        for (const mode of modes) {
+            result.push(await this.getReporter(mode));
+        }
+        return result;
+    }
+    async execute(inputs) {
+        this.inputs = inputs;
+        const reporters = await this.getReporters();
+        try {
+            const reportGenerator = kubeconform_report_generator_1.KubeconformReportGenerator.getInstance();
+            const reportResult = await reportGenerator.generateReport(this.inputs.file, { showFilename: this.inputs.showFilename });
+            for (const reporter of reporters) {
+                await reporter.report(reportResult);
+            }
+            return reportResult.failed && this.inputs.failOnError ? 1 : 0;
+        }
+        catch (e) {
+            this.gitHubCheck?.cancel();
+            throw e;
+        }
+    }
+}
+exports.ActionOrchestrator = ActionOrchestrator;
+
+
+/***/ }),
+
+/***/ 2706:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CHECK_NAME = exports.APPLICATION_NAME = void 0;
+// TODO change to your application name (e.g. kubeconform-reporter)
+exports.APPLICATION_NAME = 'kubeconfrom-reporter';
+// TODO change to your check name (e.g. Kubeconform Check)
+exports.CHECK_NAME = 'Kubeconform Check';
+
+
+/***/ }),
+
+/***/ 6149:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GitHubCheck = exports.GitHubCheckCreator = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const utils_1 = __nccwpck_require__(3166);
+class GitHubCheckCreator {
+    octokit;
+    context;
+    constructor(octokit, context) {
+        this.octokit = octokit;
+        this.context = context;
+    }
+    async create(name) {
+        const head_sha = utils_1.ContextExtensions.of(this.context).getSha();
+        core.info(`Creating ${name}...`);
+        const payload = {
+            owner: this.context.repo.owner,
+            repo: this.context.repo.repo,
+            name,
+            head_sha
+        };
+        core.debug(`Check payload: ${JSON.stringify(payload)}`);
+        const response = await this.octokit.rest.checks.create(payload);
+        if (response.status !== 201) {
+            core.warning(`Unexpected status code received when creating ${name}: ${response.status}`);
+            core.debug(JSON.stringify(response, null, 2));
+        }
+        else {
+            core.info(`${name} created`);
+            core.debug(`Check response: ${JSON.stringify(response.data)}`);
+        }
+        return new GitHubCheck(this.octokit, this.context, name, response.data.id);
+    }
+}
+exports.GitHubCheckCreator = GitHubCheckCreator;
+class GitHubCheck {
+    octokit;
+    context;
+    checkName;
+    checkRunId;
+    constructor(octokit, context, checkName, checkRunId) {
+        this.octokit = octokit;
+        this.context = context;
+        this.checkName = checkName;
+        this.checkRunId = checkRunId;
+    }
+    async pass(summary, text) {
+        return this.finish('success', summary, text);
+    }
+    async fail(summary, text) {
+        return this.finish('failure', summary, text);
+    }
+    async skip() {
+        return this.finish('skipped', `${this.checkName} was skipped`, '');
+    }
+    async cancel() {
+        return this.finish('cancelled', `${this.checkName} Check could not be completed`, `Something went wrong and the ${this.checkName} could not be completed. Check your action logs for more details.`);
+    }
+    async finish(conclusion, summary, text) {
+        const response = await this.octokit.rest.checks.update({
+            owner: this.context.repo.owner,
+            repo: this.context.repo.repo,
+            check_run_id: this.checkRunId,
+            status: 'completed',
+            conclusion,
+            output: {
+                title: this.checkName,
+                summary,
+                text
+            }
+        });
+        if (response.status !== 200) {
+            core.warning(`Unexpected status code received when creating check: ${response.status}`);
+            core.debug(JSON.stringify(response, null, 2));
+        }
+        else {
+            core.info(`${this.checkName} updated`);
+        }
+    }
+}
+exports.GitHubCheck = GitHubCheck;
+
+
+/***/ }),
+
+/***/ 9452:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GitHubPRCommenter = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+function getCommentPreface(id) {
+    return `<!-- Comment automatically managed by ${id}, do not remove this line -->`;
+}
+class GitHubPRCommenter {
+    applicationName;
+    octokit;
+    context;
+    commentPreface;
+    constructor(applicationName, octokit, context) {
+        this.applicationName = applicationName;
+        this.octokit = octokit;
+        this.context = context;
+        this.commentPreface = getCommentPreface(applicationName);
+    }
+    async comment(data) {
+        const message = this.commentPreface.concat('\r\n', data);
+        const contextIssue = this.context.issue.number;
+        const contextOwner = this.context.repo.owner;
+        const contextRepo = this.context.repo.repo;
+        core.debug('Gathering existing comments...');
+        const { data: existingComments } = await this.octokit.rest.issues.listComments({
+            issue_number: contextIssue,
+            owner: contextOwner,
+            repo: contextRepo
+        });
+        for (const comment of existingComments) {
+            const firstLine = comment.body?.split('\r\n')[0];
+            if (firstLine === this.commentPreface) {
+                core.debug(`Existing comment from ${this.applicationName} found. Attempting to delete it...`);
+                this.octokit.rest.issues.deleteComment({
+                    comment_id: comment.id,
+                    owner: contextOwner,
+                    repo: contextRepo
+                });
+            }
+        }
+        core.debug('Creating a new comment...');
+        this.octokit.rest.issues.createComment({
+            issue_number: contextIssue,
+            owner: contextOwner,
+            repo: contextRepo,
+            body: message
+        });
+        core.debug('Successfully created a new comment!');
+    }
+}
+exports.GitHubPRCommenter = GitHubPRCommenter;
+
+
+/***/ }),
+
+/***/ 3166:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.contextExt = exports.ContextExtensions = void 0;
+const github = __importStar(__nccwpck_require__(5438));
+const prEvents = [
+    'pull_request',
+    'pull_request_target',
+    'pull_request_review',
+    'pull_request_review_comment'
+];
+const REFS_REGEX = RegExp('refs/(heads|tags)/');
+class ContextExtensions {
+    context;
+    constructor(context) {
+        this.context = context;
+    }
+    isPullRequest() {
+        return prEvents.includes(this.context.eventName);
+    }
+    getSha() {
+        let sha = this.context.sha;
+        if (this.isPullRequest()) {
+            const pull = this.context.payload.pull_request;
+            if (pull?.head.sha) {
+                sha = pull?.head.sha;
+            }
+        }
+        return sha;
+    }
+    getCurrentBranchName() {
+        return this.context.ref.replace(REFS_REGEX, '');
+    }
+    getCurrentCommitId(short = true) {
+        let commitId = this.context.sha;
+        if (short)
+            commitId = commitId.substring(0, 7);
+        return commitId;
+    }
+    static of(context) {
+        return new ContextExtensions(context);
+    }
+}
+exports.ContextExtensions = ContextExtensions;
+exports.contextExt = ContextExtensions.of(github.context);
+
+
+/***/ }),
+
+/***/ 6144:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core = __importStar(__nccwpck_require__(2186));
+const inputs_1 = __nccwpck_require__(8767);
+const action_orchestrator_1 = __nccwpck_require__(8013);
+async function run() {
+    const inputs = (0, inputs_1.gatherInputs)();
+    const exitCode = await new action_orchestrator_1.ActionOrchestrator().execute(inputs);
+    if (exitCode !== 0) {
+        core.setFailed(`Reporter exited with code ${exitCode}, failing...`);
+    }
+}
+// eslint-disable-next-line github/no-then
+run().catch(error => {
+    core.error(error);
+    if (error instanceof Error) {
+        core.setFailed(error.message);
+    }
+});
+
+
+/***/ }),
+
+/***/ 8767:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.gatherInputs = exports.ModeOption = exports.Input = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const utils_1 = __nccwpck_require__(3166);
+// TODO Add or change inputs as required
+var Input;
+(function (Input) {
+    Input["FILE"] = "file";
+    Input["SHOW_FILENAME"] = "show-filename";
+    Input["MODES"] = "modes";
+    Input["GITHUB_TOKEN"] = "token";
+    Input["FAIL_ON_ERROR"] = "fail-on-error";
+})(Input || (exports.Input = Input = {}));
+var ModeOption;
+(function (ModeOption) {
+    ModeOption["PR_COMMENT"] = "pr-comment";
+    ModeOption["CHECK"] = "check";
+    ModeOption["SUMMARY"] = "summary";
+})(ModeOption || (exports.ModeOption = ModeOption = {}));
+function gatherInputs() {
+    // TODO adapt method to return your changed inputs if required
+    const file = getInputFile();
+    const modes = getInputModes();
+    const token = getInputToken();
+    const showFilename = getInputShowFilename();
+    const failOnError = getInputFailOnError();
+    return { file, modes, token, showFilename, failOnError };
+}
+exports.gatherInputs = gatherInputs;
+function getInputFile() {
+    return core.getInput(Input.FILE, { required: true });
+}
+function getInputShowFilename() {
+    return core.getBooleanInput(Input.SHOW_FILENAME);
+}
+function internalGetInputModes() {
+    const multilineInput = core.getMultilineInput(Input.MODES);
+    return multilineInput
+        .filter(x => !!x)
+        .map(x => {
+        if (!Object.values(ModeOption).includes(x)) {
+            throw new Error(`Invalid ${Input.MODES} option '${x}' on input '${JSON.stringify(multilineInput)}'`);
+        }
+        return x;
+    });
+}
+const NOT_IN_PR_CONTEXT_WARNING = "Selected 'pr-comment' mode but the action is not running in a pull request context. Ignoring this mode.";
+const NO_ADDITIONAL_MODE_SELECTED_USE_CHECK = "No additional mode selected, using 'check' mode.";
+function getInputModes() {
+    const modes = new Set(internalGetInputModes());
+    const isPullRequest = utils_1.contextExt.isPullRequest();
+    if (modes.size <= 0) {
+        if (isPullRequest) {
+            modes.add(ModeOption.PR_COMMENT);
+        }
+        modes.add(ModeOption.CHECK);
+    }
+    if (modes.has(ModeOption.PR_COMMENT) && !isPullRequest) {
+        core.warning(NOT_IN_PR_CONTEXT_WARNING);
+        modes.delete(ModeOption.PR_COMMENT);
+        if (modes.size <= 0) {
+            core.warning(NO_ADDITIONAL_MODE_SELECTED_USE_CHECK);
+            modes.add(ModeOption.CHECK);
+        }
+    }
+    return modes;
+}
+function getInputToken() {
+    return core.getInput(Input.GITHUB_TOKEN, { required: true });
+}
+function getInputFailOnError() {
+    return core.getBooleanInput(Input.FAIL_ON_ERROR);
+}
+// TODO Add methods for your extra inputs
+// Pattern: function getInput<input-name>(): <type>
+
+
+/***/ }),
+
+/***/ 3348:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CheckReporter = void 0;
+// TODO change with a FAIL message for your summary
+const FAIL_SUMMARY = 'Manifests found that are not valid!';
+// TODO change with a SUCCESS message for your summary
+const SUCCESS_SUMMARY = 'No invalid manifests!';
+class CheckReporter {
+    gitHubCheck;
+    constructor(gitHubCheck) {
+        this.gitHubCheck = gitHubCheck;
+    }
+    async report(data) {
+        if (data.failed) {
+            await this.gitHubCheck.fail(FAIL_SUMMARY, data.report);
+        }
+        else {
+            await this.gitHubCheck.pass(SUCCESS_SUMMARY, data.report);
+        }
+    }
+}
+exports.CheckReporter = CheckReporter;
+
+
+/***/ }),
+
+/***/ 2639:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CommentReporter = void 0;
+class CommentReporter {
+    gitHubPRCommenter;
+    constructor(gitHubPRCommenter) {
+        this.gitHubPRCommenter = gitHubPRCommenter;
+    }
+    async report(data) {
+        await this.gitHubPRCommenter.comment(data.report);
+    }
+}
+exports.CommentReporter = CommentReporter;
+
+
+/***/ }),
+
+/***/ 4918:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.KubeconformReportGenerator = void 0;
+const fs = __importStar(__nccwpck_require__(3292));
+const utils_1 = __nccwpck_require__(239);
+// TODO change all constants below with your reporting format and messages
+const HEADER = (showFilename) => `${showFilename ? '| Filename ' : ''}| Name | Kind | Version | Message |`;
+const HEADER_ALIGNMENT = (showFilename) => `${showFilename ? '|-' : ''}|-|-|-|-|`;
+const FILE_ENCODING = 'utf-8';
+const SUCCESS_COMMENT = '# :white_check_mark: All Kubernetes manifests are valid!';
+const FAIL_COMMENT = '# :x: Invalid Kubernetes manifests found!';
+// TODO change this class with and implementation for your report generator
+class KubeconformReportGenerator {
+    constructor() { }
+    makeReportLine(line, properties) {
+        const filename = properties.showFilename
+            ? `| ${(0, utils_1.noBreak)(line.filename)} `
+            : '';
+        return `${filename}| ${(0, utils_1.noBreak)(line.name)} | ${(0, utils_1.noBreak)(line.kind)} | ${(0, utils_1.noBreak)(line.version)} | ${line.message} |`;
+    }
+    async generateReport(path, properties) {
+        const result = await fs.readFile(path, FILE_ENCODING);
+        const kubeconformResult = JSON.parse(result);
+        const reportTable = [];
+        const resources = kubeconformResult.resources ?? [];
+        if (resources.length <= 0)
+            return { report: SUCCESS_COMMENT, failed: false };
+        reportTable.push(FAIL_COMMENT);
+        reportTable.push(HEADER(properties.showFilename));
+        reportTable.push(HEADER_ALIGNMENT(properties.showFilename));
+        for (const resource of resources) {
+            const line = {
+                name: resource.name,
+                kind: resource.kind,
+                version: resource.version,
+                message: resource.msg,
+                filename: resource.filename
+            };
+            reportTable.push(this.makeReportLine(line, properties));
+        }
+        return { report: reportTable.join('\n'), failed: true };
+    }
+    static instance;
+    static getInstance() {
+        if (!KubeconformReportGenerator.instance) {
+            KubeconformReportGenerator.instance = new KubeconformReportGenerator();
+        }
+        return KubeconformReportGenerator.instance;
+    }
+}
+exports.KubeconformReportGenerator = KubeconformReportGenerator;
+
+
+/***/ }),
+
+/***/ 867:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SummaryReporter = void 0;
+class SummaryReporter {
+    theSummary;
+    constructor(theSummary) {
+        this.theSummary = theSummary;
+    }
+    async report(data) {
+        await this.theSummary.addRaw(data.report).write();
+    }
+}
+exports.SummaryReporter = SummaryReporter;
+
+
+/***/ }),
+
+/***/ 239:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.noBreak = void 0;
+function noBreak(s) {
+    return s.replace(/-/g, '&#8209;').replace(/ /g, '&nbsp;');
+}
+exports.noBreak = noBreak;
+
+
+/***/ }),
+
 /***/ 2877:
 /***/ ((module) => {
 
@@ -10590,9 +10518,8 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(3109);
+/******/ 	var __webpack_exports__ = __nccwpck_require__(6144);
 /******/ 	module.exports = __webpack_exports__;
 /******/ 	
 /******/ })()
 ;
-//# sourceMappingURL=index.js.map

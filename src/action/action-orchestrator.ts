@@ -1,22 +1,22 @@
-import {GitHubCheck, GitHubCheckCreator} from '../github/check'
-import {Inputs, ModeOption} from '../input/inputs'
-import {Reporter} from '../report/reporter'
+import { GitHubCheck, GitHubCheckCreator } from '../github/check'
+import { Inputs, ModeOption } from '../input/inputs'
+import { Reporter } from '../report/reporter'
 import * as github from '@actions/github'
-import {CommentReporter} from '../report/comment-reporter'
-import {GitHubPRCommenter} from '../github/comment'
-import {APPLICATION_NAME, CHECK_NAME} from './constants'
-import {CheckReporter} from '../report/check-reporter'
-import {SummaryReporter} from '../report/summary-reporter'
+import { CommentReporter } from '../report/comment-reporter'
+import { GitHubPRCommenter } from '../github/comment'
+import { APPLICATION_NAME, CHECK_NAME } from './constants'
+import { CheckReporter } from '../report/check-reporter'
+import { SummaryReporter } from '../report/summary-reporter'
 import * as core from '@actions/core'
-import {GitHub} from '@actions/github/lib/utils'
-import {KubeconformReportGenerator} from '../report/kubeconform-report-generator'
+import { GitHub } from '@actions/github/lib/utils'
+import { KubeconformReportGenerator } from '../report/kubeconform-report-generator'
 
 export class ActionOrchestrator {
   private gitHubCheck: GitHubCheck | null = null
   private inputs?: Inputs
 
   private getOctokit(): InstanceType<typeof GitHub> {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion,@typescript-eslint/no-extra-non-null-assertion
     return github.getOctokit(this.inputs!!.token)
   }
 
@@ -44,7 +44,7 @@ export class ActionOrchestrator {
   }
 
   private async getReporters(): Promise<Reporter[]> {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion,@typescript-eslint/no-extra-non-null-assertion
     const modes = this.inputs!!.modes
     const result: Reporter[] = []
     for (const mode of modes) {
@@ -60,7 +60,7 @@ export class ActionOrchestrator {
       const reportGenerator = KubeconformReportGenerator.getInstance()
       const reportResult = await reportGenerator.generateReport(
         this.inputs.file,
-        {showFilename: this.inputs.showFilename}
+        { showFilename: this.inputs.showFilename }
       )
       for (const reporter of reporters) {
         await reporter.report(reportResult)
