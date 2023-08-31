@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
-import {gatherInputs} from './input/inputs'
-import {ActionOrchestrator} from './action/action-orchestrator'
+import { gatherInputs } from './input/inputs'
+import { ActionOrchestrator } from './action/action-orchestrator'
 
 async function run(): Promise<void> {
   const inputs = gatherInputs()

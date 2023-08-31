@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import {contextExt} from '../github/utils'
+import { contextExt } from '../github/utils'
 
 // TODO Add or change inputs as required
 export interface Inputs {
@@ -32,11 +32,11 @@ export function gatherInputs(): Inputs {
   const token = getInputToken()
   const showFilename = getInputShowFilename()
   const failOnError = getInputFailOnError()
-  return {file, modes, token, showFilename, failOnError}
+  return { file, modes, token, showFilename, failOnError }
 }
 
 function getInputFile(): string {
-  return core.getInput(Input.FILE, {required: true})
+  return core.getInput(Input.FILE, { required: true })
 }
 
 function getInputShowFilename(): boolean {
@@ -85,7 +85,7 @@ function getInputModes(): Set<ModeOption> {
 }
 
 function getInputToken(): string {
-  return core.getInput(Input.GITHUB_TOKEN, {required: true})
+  return core.getInput(Input.GITHUB_TOKEN, { required: true })
 }
 
 function getInputFailOnError(): boolean {

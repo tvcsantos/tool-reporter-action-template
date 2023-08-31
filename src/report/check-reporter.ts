@@ -1,6 +1,6 @@
-import {GitHubCheck} from '../github/check'
-import {Reporter} from './reporter'
-import {ReportResult} from '../model/report-result'
+import { GitHubCheck } from '../github/check'
+import { Reporter } from './reporter'
+import { ReportResult } from '../model/report-result'
 
 // TODO change with a FAIL message for your summary
 const FAIL_SUMMARY = 'Manifests found that are not valid!'

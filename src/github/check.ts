@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
-import {ContextExtensions} from './utils'
-import {GitHub} from '@actions/github/lib/utils'
-import {Context} from '@actions/github/lib/context'
+import { ContextExtensions } from './utils'
+import { GitHub } from '@actions/github/lib/utils'
+import { Context } from '@actions/github/lib/context'
 
 export class GitHubCheckCreator {
   private readonly octokit: InstanceType<typeof GitHub>

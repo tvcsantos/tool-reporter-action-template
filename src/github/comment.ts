@@ -1,5 +1,5 @@
-import {GitHub} from '@actions/github/lib/utils'
-import {Context} from '@actions/github/lib/context'
+import { GitHub } from '@actions/github/lib/utils'
+import { Context } from '@actions/github/lib/context'
 import * as core from '@actions/core'
 
 function getCommentPreface(id: string): string {
@@ -31,7 +31,7 @@ export class GitHubPRCommenter {
     const contextRepo = this.context.repo.repo
 
     core.debug('Gathering existing comments...')
-    const {data: existingComments} =
+    const { data: existingComments } =
       await this.octokit.rest.issues.listComments({
         issue_number: contextIssue,
         owner: contextOwner,
