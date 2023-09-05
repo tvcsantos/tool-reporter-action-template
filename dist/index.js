@@ -9659,6 +9659,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ActionOrchestrator = void 0;
 const check_1 = __nccwpck_require__(6149);
@@ -9671,6 +9674,9 @@ const check_reporter_1 = __nccwpck_require__(3348);
 const summary_reporter_1 = __nccwpck_require__(867);
 const core = __importStar(__nccwpck_require__(2186));
 const kubeconform_report_generator_1 = __nccwpck_require__(4918);
+const promises_1 = __importDefault(__nccwpck_require__(3292));
+const extended_context_1 = __nccwpck_require__(3634);
+const FILE_ENCODING = 'utf-8';
 class ActionOrchestrator {
     gitHubCheck = null;
     inputs;
@@ -9681,9 +9687,9 @@ class ActionOrchestrator {
     async getReporter(mode) {
         switch (mode) {
             case inputs_1.ModeOption.PR_COMMENT:
-                return new comment_reporter_1.CommentReporter(new comment_1.GitHubPRCommenter(constants_1.APPLICATION_NAME, this.getOctokit(), github.context));
+                return new comment_reporter_1.CommentReporter(new comment_1.GitHubPRCommenter(constants_1.APPLICATION_NAME, this.getOctokit(), extended_context_1.extendedContext));
             case inputs_1.ModeOption.CHECK: {
-                const gitHubCheckCreator = new check_1.GitHubCheckCreator(this.getOctokit(), github.context);
+                const gitHubCheckCreator = new check_1.GitHubCheckCreator(this.getOctokit(), extended_context_1.extendedContext);
                 this.gitHubCheck = await gitHubCheckCreator.create(constants_1.CHECK_NAME);
                 return new check_reporter_1.CheckReporter(this.gitHubCheck);
             }
@@ -9700,16 +9706,39 @@ class ActionOrchestrator {
         }
         return result;
     }
+    async parseReport() {
+        // eslint-disable-next-line @typescript-eslint/no-extra-non-null-assertion,@typescript-eslint/no-non-null-assertion
+        const fileContents = await promises_1.default.readFile(this.inputs.file, {
+            encoding: FILE_ENCODING
+        });
+        return JSON.parse(fileContents);
+    }
+    async doReports(reportData, reporters) {
+        const reportGenerator = kubeconform_report_generator_1.KubeconformReportGenerator.getInstance();
+        const reportResults = new Map();
+        let failed = false;
+        for (const reporter of reporters) {
+            let reportResult = reportResults.get(reporter.maxSize);
+            if (reportResult === undefined) {
+                reportResult = await reportGenerator.generateReport(reportData, {
+                    // eslint-disable-next-line @typescript-eslint/no-extra-non-null-assertion,@typescript-eslint/no-non-null-assertion
+                    showFilename: this.inputs.showFilename,
+                    maxSize: reporter.maxSize ?? undefined
+                });
+                reportResults.set(reporter.maxSize, reportResult);
+            }
+            failed &&= reportResult.failed;
+            await reporter.report(reportResult);
+        }
+        return failed;
+    }
     async execute(inputs) {
         this.inputs = inputs;
         const reporters = await this.getReporters();
         try {
-            const reportGenerator = kubeconform_report_generator_1.KubeconformReportGenerator.getInstance();
-            const reportResult = await reportGenerator.generateReport(this.inputs.file, { showFilename: this.inputs.showFilename });
-            for (const reporter of reporters) {
-                await reporter.report(reportResult);
-            }
-            return reportResult.failed && this.inputs.failOnError ? 1 : 0;
+            const report = await this.parseReport();
+            const failed = await this.doReports(report, reporters);
+            return failed && this.inputs.failOnError ? 1 : 0;
         }
         catch (e) {
             this.gitHubCheck?.cancel();
@@ -9768,7 +9797,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GitHubCheck = exports.GitHubCheckCreator = void 0;
 const core = __importStar(__nccwpck_require__(2186));
-const utils_1 = __nccwpck_require__(3166);
 class GitHubCheckCreator {
     octokit;
     context;
@@ -9777,7 +9805,7 @@ class GitHubCheckCreator {
         this.context = context;
     }
     async create(name) {
-        const head_sha = utils_1.ContextExtensions.of(this.context).getSha();
+        const head_sha = this.context.getSha();
         core.info(`Creating ${name}...`);
         const payload = {
             owner: this.context.repo.owner,
@@ -9931,7 +9959,7 @@ exports.GitHubPRCommenter = GitHubPRCommenter;
 
 /***/ }),
 
-/***/ 3166:
+/***/ 3634:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -9960,7 +9988,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.contextExt = exports.ContextExtensions = void 0;
+exports.extendedContext = exports.extendContext = void 0;
 const github = __importStar(__nccwpck_require__(5438));
 const prEvents = [
     'pull_request',
@@ -9969,39 +9997,35 @@ const prEvents = [
     'pull_request_review_comment'
 ];
 const REFS_REGEX = RegExp('refs/(heads|tags)/');
-class ContextExtensions {
-    context;
-    constructor(context) {
-        this.context = context;
-    }
-    isPullRequest() {
-        return prEvents.includes(this.context.eventName);
-    }
-    getSha() {
-        let sha = this.context.sha;
-        if (this.isPullRequest()) {
-            const pull = this.context.payload.pull_request;
+function extendContext(context) {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions,@typescript-eslint/no-explicit-any
+    const result = context;
+    result.isPullRequest = () => prEvents.includes(context.eventName);
+    result.getSha = () => {
+        let sha = context.sha;
+        if (result.isPullRequest()) {
+            const pull = context.payload.pull_request;
             if (pull?.head.sha) {
                 sha = pull?.head.sha;
             }
         }
         return sha;
-    }
-    getCurrentBranchName() {
-        return this.context.ref.replace(REFS_REGEX, '');
-    }
-    getCurrentCommitId(short = true) {
-        let commitId = this.context.sha;
+    };
+    result.getCurrentBranchName = () => context.ref.replace(REFS_REGEX, '');
+    result.getCurrentCommitId = (short) => {
+        let commitId = context.sha;
         if (short)
             commitId = commitId.substring(0, 7);
         return commitId;
-    }
-    static of(context) {
-        return new ContextExtensions(context);
-    }
+    };
+    result.getLinkToFile = (filePath, line) => {
+        const link = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/blob/${result.getCurrentCommitId(false)}/${filePath}`;
+        return line !== undefined ? `${link}#L${line}` : link;
+    };
+    return result;
 }
-exports.ContextExtensions = ContextExtensions;
-exports.contextExt = ContextExtensions.of(github.context);
+exports.extendContext = extendContext;
+exports.extendedContext = extendContext(github.context);
 
 
 /***/ }),
@@ -10087,7 +10111,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.gatherInputs = exports.ModeOption = exports.Input = void 0;
 const core = __importStar(__nccwpck_require__(2186));
-const utils_1 = __nccwpck_require__(3166);
+const extended_context_1 = __nccwpck_require__(3634);
 // TODO Add or change inputs as required
 var Input;
 (function (Input) {
@@ -10134,7 +10158,7 @@ const NOT_IN_PR_CONTEXT_WARNING = "Selected 'pr-comment' mode but the action is 
 const NO_ADDITIONAL_MODE_SELECTED_USE_CHECK = "No additional mode selected, using 'check' mode.";
 function getInputModes() {
     const modes = new Set(internalGetInputModes());
-    const isPullRequest = utils_1.contextExt.isPullRequest();
+    const isPullRequest = extended_context_1.extendedContext.isPullRequest();
     if (modes.size <= 0) {
         if (isPullRequest) {
             modes.add(ModeOption.PR_COMMENT);
@@ -10171,20 +10195,29 @@ function getInputFailOnError() {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CheckReporter = void 0;
 // TODO change with a FAIL message for your summary
-const FAIL_SUMMARY = 'Manifests found that are not valid!';
+const FAIL_SUMMARY = 'Kubeconform - Manifests found that are not valid!';
 // TODO change with a SUCCESS message for your summary
-const SUCCESS_SUMMARY = 'No invalid manifests!';
+const SUCCESS_SUMMARY = 'Kubeconform - No invalid manifests!';
+const REPORT_CONTENT_TRUNCATED = '**Note: Report truncated due to character limit constraints!**';
+const MAX_CHECK_BODY_SIZE = 65535;
 class CheckReporter {
+    maxSize = MAX_CHECK_BODY_SIZE;
+    static getSummary(summary, truncated) {
+        const result = truncated
+            ? [summary, '', REPORT_CONTENT_TRUNCATED]
+            : [summary];
+        return result.join('\n');
+    }
     gitHubCheck;
     constructor(gitHubCheck) {
         this.gitHubCheck = gitHubCheck;
     }
     async report(data) {
         if (data.failed) {
-            await this.gitHubCheck.fail(FAIL_SUMMARY, data.report);
+            await this.gitHubCheck.fail(CheckReporter.getSummary(FAIL_SUMMARY, data.truncated), data.report);
         }
         else {
-            await this.gitHubCheck.pass(SUCCESS_SUMMARY, data.report);
+            await this.gitHubCheck.pass(CheckReporter.getSummary(SUCCESS_SUMMARY, data.truncated), data.report);
         }
     }
 }
@@ -10201,6 +10234,7 @@ exports.CheckReporter = CheckReporter;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommentReporter = void 0;
 class CommentReporter {
+    maxSize = null;
     gitHubPRCommenter;
     constructor(gitHubPRCommenter) {
         this.gitHubPRCommenter = gitHubPRCommenter;
@@ -10215,43 +10249,19 @@ exports.CommentReporter = CommentReporter;
 /***/ }),
 
 /***/ 4918:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.KubeconformReportGenerator = void 0;
-const fs = __importStar(__nccwpck_require__(3292));
 const utils_1 = __nccwpck_require__(239);
+const text_builder_1 = __nccwpck_require__(8758);
 // TODO change all constants below with your reporting format and messages
 const HEADER = (showFilename) => `${showFilename ? '| Filename ' : ''}| Name | Kind | Version | Message |`;
 const HEADER_ALIGNMENT = (showFilename) => `${showFilename ? '|-' : ''}|-|-|-|-|`;
-const FILE_ENCODING = 'utf-8';
-const SUCCESS_COMMENT = '# :white_check_mark: All Kubernetes manifests are valid!';
-const FAIL_COMMENT = '# :x: Invalid Kubernetes manifests found!';
+const SUCCESS_COMMENT = '# :white_check_mark: Kubeconform - All Kubernetes manifests are valid!';
+const FAIL_COMMENT = '# :x: Kubeconform - Invalid Kubernetes manifests found!';
 // TODO change this class with and implementation for your report generator
 class KubeconformReportGenerator {
     constructor() { }
@@ -10261,27 +10271,41 @@ class KubeconformReportGenerator {
             : '';
         return `${filename}| ${(0, utils_1.noBreak)(line.name)} | ${(0, utils_1.noBreak)(line.kind)} | ${(0, utils_1.noBreak)(line.version)} | ${line.message} |`;
     }
-    async generateReport(path, properties) {
-        const result = await fs.readFile(path, FILE_ENCODING);
-        const kubeconformResult = JSON.parse(result);
-        const reportTable = [];
-        const resources = kubeconformResult.resources ?? [];
-        if (resources.length <= 0)
-            return { report: SUCCESS_COMMENT, failed: false };
-        reportTable.push(FAIL_COMMENT);
-        reportTable.push(HEADER(properties.showFilename));
-        reportTable.push(HEADER_ALIGNMENT(properties.showFilename));
-        for (const resource of resources) {
+    addTitleToTextBuilder(textBuilder) {
+        textBuilder.addLines(FAIL_COMMENT);
+    }
+    addHeaderToTextBuilder(textBuilder, reportProperties) {
+        textBuilder.addLines(HEADER(reportProperties.showFilename), HEADER_ALIGNMENT(reportProperties.showFilename));
+    }
+    async addContentToTextBuilder(textBuilder, entries, reportProperties) {
+        let isContentTruncated = false;
+        for (const entry of entries) {
             const line = {
-                name: resource.name,
-                kind: resource.kind,
-                version: resource.version,
-                message: resource.msg,
-                filename: resource.filename
+                name: entry.name,
+                kind: entry.kind,
+                version: entry.version,
+                message: entry.msg,
+                filename: entry.filename
             };
-            reportTable.push(this.makeReportLine(line, properties));
+            const theReportLine = this.makeReportLine(line, reportProperties);
+            const addedLines = textBuilder.tryAddLines(theReportLine);
+            if (!addedLines) {
+                isContentTruncated = true;
+                break;
+            }
         }
-        return { report: reportTable.join('\n'), failed: true };
+        return isContentTruncated;
+    }
+    async generateReport(reportData, properties) {
+        const resources = reportData.resources ?? [];
+        if (resources.length <= 0) {
+            return { report: SUCCESS_COMMENT, failed: false, truncated: false };
+        }
+        const textBuilder = new text_builder_1.TextBuilder(properties.maxSize);
+        this.addTitleToTextBuilder(textBuilder);
+        this.addHeaderToTextBuilder(textBuilder, properties);
+        const result = await this.addContentToTextBuilder(textBuilder, resources, properties);
+        return { report: textBuilder.build(), failed: true, truncated: result };
     }
     static instance;
     static getInstance() {
@@ -10304,6 +10328,7 @@ exports.KubeconformReportGenerator = KubeconformReportGenerator;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SummaryReporter = void 0;
 class SummaryReporter {
+    maxSize = null;
     theSummary;
     constructor(theSummary) {
         this.theSummary = theSummary;
@@ -10313,6 +10338,60 @@ class SummaryReporter {
     }
 }
 exports.SummaryReporter = SummaryReporter;
+
+
+/***/ }),
+
+/***/ 8758:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TextBuilder = void 0;
+class TextBuilder {
+    maxSize;
+    lines = [];
+    sizeUpperBound = 0;
+    constructor(maxSize) {
+        this.maxSize = maxSize;
+    }
+    addLines(...lines) {
+        this.doAddLines(lines, true);
+    }
+    tryAddLines(...lines) {
+        return this.doAddLines(lines, false);
+    }
+    doAddLines(lines, required) {
+        const requiredSizeForLines = this.computeRequiredSizeForLines(lines);
+        const hasSpaceLeft = this.hasSpaceLeft(requiredSizeForLines);
+        if (required || hasSpaceLeft) {
+            this.ensureBounds(requiredSizeForLines);
+            this.lines.push(...lines);
+            this.sizeUpperBound += requiredSizeForLines;
+        }
+        return hasSpaceLeft;
+    }
+    hasSpaceLeft(delta) {
+        return (this.maxSize === undefined || this.sizeUpperBound + delta <= this.maxSize);
+    }
+    computeRequiredSizeForLines(lines) {
+        const size = lines.reduce((previousValue, currentValue) => previousValue + currentValue.length, 0);
+        const newLines = lines.length > 1 ? lines.length - 1 : 0;
+        return lines.length <= 0
+            ? 0
+            : (this.lines.length > 0 ? 1 : 0) + size + newLines;
+    }
+    ensureBounds(delta) {
+        if (!this.hasSpaceLeft(delta)) {
+            throw new Error(`Character limit ${this.maxSize} reached!`);
+        }
+    }
+    build() {
+        return this.lines.join('\n');
+    }
+}
+exports.TextBuilder = TextBuilder;
 
 
 /***/ }),

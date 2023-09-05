@@ -1,9 +1,9 @@
 import { ReportResult } from '../model/report-result'
 import { ReportProperties } from './report-properties'
 
-export interface ReportGenerator {
+export interface ReportGenerator<D> {
   generateReport(
-    path: string,
+    reportData: D,
     properties: ReportProperties
   ): Promise<ReportResult>
 }

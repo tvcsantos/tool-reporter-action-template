@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { contextExt } from '../github/utils'
+import { extendedContext } from '../github/extended-context'
 
 // TODO Add or change inputs as required
 export interface Inputs {
@@ -66,7 +66,7 @@ const NO_ADDITIONAL_MODE_SELECTED_USE_CHECK =
 
 function getInputModes(): Set<ModeOption> {
   const modes = new Set(internalGetInputModes())
-  const isPullRequest = contextExt.isPullRequest()
+  const isPullRequest = extendedContext.isPullRequest()
   if (modes.size <= 0) {
     if (isPullRequest) {
       modes.add(ModeOption.PR_COMMENT)

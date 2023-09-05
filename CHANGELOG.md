@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2023-09-05
+
+### Changed
+
+- Bump @typescript-eslint/eslint-plugin from 6.5.0 to 6.6.0
+- Bump @typescript-eslint/parser from 6.5.0 to 6.6.0
+- Bump @types/node from 20.5.7 to 20.5.9
+- Update to latest actions/typescript-action
+- Truncate long reports and avoid GitHub check max limit
+- Improve GitHub extended context code
+
 ## [2.2.0] - 2023-09-01
 
 ### Changed
@@ -54,7 +65,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Implement `tool-reporter-action-template` github action
 
-[Unreleased]: https://github.com/tvcsantos/tool-reporter-action-template/compare/v2.2.0...main
+[Unreleased]: https://github.com/tvcsantos/tool-reporter-action-template/compare/v2.3.0...main
+[2.3.0]: https://github.com/tvcsantos/tool-reporter-action-template/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/tvcsantos/tool-reporter-action-template/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/tvcsantos/tool-reporter-action-template/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/tvcsantos/tool-reporter-action-template/compare/v2.0.0...v2.0.1

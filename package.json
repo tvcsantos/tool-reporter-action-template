@@ -18,7 +18,9 @@
     "setup",
     "report"
   ],
-  "main": "dist/main.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
   "engines": {
     "node": ">=16"
   },
