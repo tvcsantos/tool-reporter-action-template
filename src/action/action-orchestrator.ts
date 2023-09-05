@@ -10,6 +10,12 @@ import { SummaryReporter } from '../report/summary-reporter'
 import * as core from '@actions/core'
 import { GitHub } from '@actions/github/lib/utils'
 import { KubeconformReportGenerator } from '../report/kubeconform-report-generator'
+import fs from 'fs/promises'
+import { extendedContext } from '../github/extended-context'
+import { KubeconformResult } from '../model/kubeconform'
+import { ReportResult } from '../model/report-result'
+
+const FILE_ENCODING = 'utf-8'
 
 export class ActionOrchestrator {
   private gitHubCheck: GitHubCheck | null = null
@@ -27,13 +33,13 @@ export class ActionOrchestrator {
           new GitHubPRCommenter(
             APPLICATION_NAME,
             this.getOctokit(),
-            github.context
+            extendedContext
           )
         )
       case ModeOption.CHECK: {
         const gitHubCheckCreator = new GitHubCheckCreator(
           this.getOctokit(),
-          github.context
+          extendedContext
         )
         this.gitHubCheck = await gitHubCheckCreator.create(CHECK_NAME)
         return new CheckReporter(this.gitHubCheck)
@@ -53,19 +59,51 @@ export class ActionOrchestrator {
     return result
   }
 
+  private async parseReport(): Promise<KubeconformResult> {
+    // eslint-disable-next-line @typescript-eslint/no-extra-non-null-assertion,@typescript-eslint/no-non-null-assertion
+    const fileContents = await fs.readFile(this.inputs!!.file, {
+      encoding: FILE_ENCODING
+    })
+    return JSON.parse(fileContents) as KubeconformResult
+  }
+
+  private async doReports(
+    reportData: KubeconformResult,
+    reporters: Reporter[]
+  ): Promise<boolean> {
+    const reportGenerator = KubeconformReportGenerator.getInstance()
+    const reportResults = new Map<number | null, ReportResult>()
+    let failed = false
+
+    for (const reporter of reporters) {
+      let reportResult = reportResults.get(reporter.maxSize)
+
+      if (reportResult === undefined) {
+        reportResult = await reportGenerator.generateReport(reportData, {
+          // eslint-disable-next-line @typescript-eslint/no-extra-non-null-assertion,@typescript-eslint/no-non-null-assertion
+          showFilename: this.inputs!!.showFilename,
+          maxSize: reporter.maxSize ?? undefined
+        })
+        reportResults.set(reporter.maxSize, reportResult)
+      }
+
+      failed &&= reportResult.failed
+
+      await reporter.report(reportResult)
+    }
+
+    return failed
+  }
+
   async execute(inputs: Inputs): Promise<number> {
     this.inputs = inputs
     const reporters = await this.getReporters()
     try {
-      const reportGenerator = KubeconformReportGenerator.getInstance()
-      const reportResult = await reportGenerator.generateReport(
-        this.inputs.file,
-        { showFilename: this.inputs.showFilename }
-      )
-      for (const reporter of reporters) {
-        await reporter.report(reportResult)
-      }
-      return reportResult.failed && this.inputs.failOnError ? 1 : 0
+      const report = await this.parseReport()
+
+      const failed = await this.doReports(report, reporters)
+
+      return failed && this.inputs.failOnError ? 1 : 0
     } catch (e) {
       this.gitHubCheck?.cancel()
       throw e
