@@ -1,7 +1,7 @@
 {
   "name": "tool-reporter-action-template",
   "description": "A template GitHub action for generating reports for tools (e.g. linters)",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "author": "tvcsantos",
   "private": true,
   "homepage": "https://github.com/tvcsantos/tool-reporter-action-template",
