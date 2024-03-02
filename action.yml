@@ -32,6 +32,10 @@ inputs:
     required: false
     description: 'Fail the action if errors are found on the report'
     default: 'false'
+  comment-pr-on-success:
+    required: false
+    description: Comment on PR even if there are no findings
+    default: 'true'
   # TODO Add extra inputs if required
 runs:
   using: node20

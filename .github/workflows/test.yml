@@ -15,6 +15,7 @@ jobs:
         show-filename: [true, false]
         modes: [pr-comment, check, summary]
         file: [kubeconform-result-error.json, kubeconform-result-ok.json]
+        comment-pr-on-success: [true, false]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -25,6 +26,7 @@ jobs:
           file: ./__tests__/${{ matrix.file }}
           show-filename: ${{ matrix.show-filename }}
           modes: ${{ matrix.modes }}
+          comment-pr-on-success: ${{ matrix.comment-pr-on-success }}
   test-multi-mode:
     strategy:
       matrix:
