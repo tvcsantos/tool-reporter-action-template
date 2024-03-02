@@ -327,7 +327,6 @@ This guide was adapted from [weallcontribute](https://www.npmjs.com/package/weal
 [conventional-commits]: https://www.conventionalcommits.org/
 [keep-a-changelog]: https://keepachangelog.com/
 [gitflow]: https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow
-[issues-prs-cleanup]: https://github.com/tvcsantos/tool-reporter-action-template/blob/develop/CONTRIBUTING.md#clean-up-issues-and-prs
 [issue-tracker]: https://github.com/tvcsantos/tool-reporter-action-template/issues
 [pull-requests]: https://github.com/tvcsantos/tool-reporter-action-template/pulls
 [support-open-issues]: https://github.com/tvcsantos/tool-reporter-action-template/issues?q=is%3Aopen+is%3Aissue+label%3Asupport
