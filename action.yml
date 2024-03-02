@@ -4,8 +4,8 @@ name: 'Kubeconform reporter'
 description: 'Make a report for Kubeconform results'
 
 branding:
-  icon: settings
-  color: blue
+  icon: 'settings'
+  color: 'blue'
 
 inputs:
   # TODO Adapt to your needs, could be a file, a directory, etc.
@@ -34,5 +34,5 @@ inputs:
     default: 'false'
   # TODO Add extra inputs if required
 runs:
-  using: 'node16'
-  main: 'dist/index.js'
+  using: node20
+  main: dist/index.js
