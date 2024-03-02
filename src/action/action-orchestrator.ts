@@ -19,11 +19,10 @@ const FILE_ENCODING = 'utf-8'
 
 export class ActionOrchestrator {
   private gitHubCheck: GitHubCheck | null = null
-  private inputs?: Inputs
+  private inputs!: Inputs
 
   private getOctokit(): InstanceType<typeof GitHub> {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion,@typescript-eslint/no-extra-non-null-assertion
-    return github.getOctokit(this.inputs!!.token)
+    return github.getOctokit(this.inputs.token)
   }
 
   private async getReporter(mode: ModeOption): Promise<Reporter> {
@@ -50,8 +49,7 @@ export class ActionOrchestrator {
   }
 
   private async getReporters(): Promise<Reporter[]> {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion,@typescript-eslint/no-extra-non-null-assertion
-    const modes = this.inputs!!.modes
+    const modes = this.inputs.modes
     const result: Reporter[] = []
     for (const mode of modes) {
       result.push(await this.getReporter(mode))
@@ -60,8 +58,7 @@ export class ActionOrchestrator {
   }
 
   private async parseReport(): Promise<KubeconformResult> {
-    // eslint-disable-next-line @typescript-eslint/no-extra-non-null-assertion,@typescript-eslint/no-non-null-assertion
-    const fileContents = await fs.readFile(this.inputs!!.file, {
+    const fileContents = await fs.readFile(this.inputs.file, {
       encoding: FILE_ENCODING
     })
     return JSON.parse(fileContents) as KubeconformResult
@@ -80,8 +77,7 @@ export class ActionOrchestrator {
 
       if (reportResult === undefined) {
         reportResult = await reportGenerator.generateReport(reportData, {
-          // eslint-disable-next-line @typescript-eslint/no-extra-non-null-assertion,@typescript-eslint/no-non-null-assertion
-          showFilename: this.inputs!!.showFilename,
+          showFilename: this.inputs.showFilename,
           maxSize: reporter.maxSize ?? undefined
         })
         reportResults.set(reporter.maxSize, reportResult)
