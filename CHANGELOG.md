@@ -93,7 +93,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Implement `tool-reporter-action-template` github action
 
-[Unreleased]: https://github.com/tvcsantos/tool-reporter-action-template/compare/v3.0.0...main
 [3.0.0]: https://github.com/tvcsantos/tool-reporter-action-template/compare/v2.5.0...v3.0.0
 [2.5.0]: https://github.com/tvcsantos/tool-reporter-action-template/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/tvcsantos/tool-reporter-action-template/compare/v2.3.0...v2.4.0
