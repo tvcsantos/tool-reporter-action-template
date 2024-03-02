@@ -5,13 +5,14 @@ import { ReportResult } from '../model/report-result'
 export class CommentReporter implements Reporter {
   maxSize = null
 
-  private gitHubPRCommenter: GitHubPRCommenter
-
-  constructor(gitHubPRCommenter: GitHubPRCommenter) {
-    this.gitHubPRCommenter = gitHubPRCommenter
-  }
+  constructor(
+    private readonly gitHubPRCommenter: GitHubPRCommenter,
+    private readonly commentOnSuccess: boolean
+  ) {}
 
   async report(data: ReportResult): Promise<void> {
-    await this.gitHubPRCommenter.comment(data.report)
+    if (data.failed || this.commentOnSuccess) {
+      await this.gitHubPRCommenter.comment(data.report)
+    }
   }
 }

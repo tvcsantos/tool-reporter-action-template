@@ -7,19 +7,13 @@ function getCommentPreface(id: string): string {
 }
 
 export class GitHubPRCommenter {
-  private readonly applicationName: string
-  private readonly octokit: InstanceType<typeof GitHub>
-  private readonly context: Context
   private readonly commentPreface: string
 
   constructor(
-    applicationName: string,
-    octokit: InstanceType<typeof GitHub>,
-    context: Context
+    private readonly applicationName: string,
+    private readonly octokit: InstanceType<typeof GitHub>,
+    private readonly context: Context
   ) {
-    this.applicationName = applicationName
-    this.octokit = octokit
-    this.context = context
     this.commentPreface = getCommentPreface(applicationName)
   }
 
@@ -44,7 +38,7 @@ export class GitHubPRCommenter {
         core.debug(
           `Existing comment from ${this.applicationName} found. Attempting to delete it...`
         )
-        // this is supposed to be a fire-and-forget operation
+        // This can be async, we don't need to wait for it
         // noinspection ES6MissingAwait
         this.octokit.rest.issues.deleteComment({
           comment_id: comment.id,
@@ -56,9 +50,7 @@ export class GitHubPRCommenter {
 
     core.debug('Creating a new comment...')
 
-    // this is supposed to be a fire-and-forget operation
-    // noinspection ES6MissingAwait
-    this.octokit.rest.issues.createComment({
+    await this.octokit.rest.issues.createComment({
       issue_number: contextIssue,
       owner: contextOwner,
       repo: contextRepo,
