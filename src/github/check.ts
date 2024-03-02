@@ -2,6 +2,10 @@ import * as core from '@actions/core'
 import { GitHub } from '@actions/github/lib/utils'
 import { Context } from '@actions/github/lib/context'
 import { ExtendedContext } from './extended-context'
+import type { RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods/dist-types/generated/parameters-and-response-types'
+
+type Conclusion =
+  RestEndpointMethodTypes['checks']['update']['parameters']['conclusion']
 
 export class GitHubCheckCreator {
   private readonly octokit: InstanceType<typeof GitHub>
@@ -81,7 +85,7 @@ export class GitHubCheck {
   }
 
   private async finish(
-    conclusion: string,
+    conclusion: Conclusion,
     summary: string,
     text: string
   ): Promise<void> {
